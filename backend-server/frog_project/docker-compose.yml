@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "frog_db"
+      POSTGRES_PASSWORD: "aa"
+    volumes:
+      - ../frog_storage/db:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: on-failure:5
+    ports:
+      - "8055:8080"
+    depends_on:
+      - db
+  flask-api:
+    image: flask-api
+    restart: unless-stopped
+    build:
+      context: ./api_backend
+    volumes:
+      - ../frog_storage/frog_images:/frog_images
+    depends_on:
+      - db
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./api_backend/static_files:/opt/services/flaskapp/static
+      - ./nginx/certs_selfsigned:/etc/ssl/certs_selfsigned
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./nginx/certs_acme-sh:/etc/ssl/certs_acme-sh/:ro
+    depends_on:
+      - flask-api
+  acme-sh:
+    image: neilpang/acme.sh
+    environment:
+      DNSHOME_Subdomain: ""
+      DNSHOME_SubdomainPassword: ""
+    entrypoint: "/bin/sh -c 'acme.sh --issue --dns dns_dnshome -d domain.tld --server letsencrypt --cert-file /etc/certs/cert.pem --key-file /etc/certs/key.pem --fullchain-file /etc/certs/fullchain.pem; /entry.sh daemon'"
+    volumes:
+      - ./nginx/certs_acme-sh:/etc/certs
+    depends_on:
+      - nginx
+  ml-backend:
+    image: ml-backend
+    build:
+      context: ./
+      dockerfile: ./ml_backend/Dockerfile
+    volumes:
+      - ../frog_storage/frog_images:/frog_images
+    depends_on:
+      - db
+      - flask-api
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1300
+

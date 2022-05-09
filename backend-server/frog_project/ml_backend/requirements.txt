@@ -1,0 +1,16 @@
+sqlalchemy
+bcrypt
+psycopg2
+opencv-python
+numpy
+scipy
+Pillow
+cython
+scikit-image
+keras~=2.1.6
+tensorflow~=1.15.0
+tensorflow-gpu~=1.15.0
+h5py~=2.10.0
+imgaug
+Shapely
+IPython[all]

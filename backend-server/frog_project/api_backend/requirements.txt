@@ -1,0 +1,10 @@
+flask
+flask_sqlalchemy
+Flask-Login
+flask-apscheduler
+bcrypt
+gunicorn
+gevent
+psycopg2
+Werkzeug
+requests
